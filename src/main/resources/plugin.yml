@@ -1,0 +1,11 @@
+name: SunGameCore
+version: '${version}'
+main: me.suxuan.sungame.SunGameCorePlugin
+description: 通用小游戏核心库，集成临时竞技场世界、队列、生命周期、保护、聊天隔离与占位符 API
+api-version: '1.21.11'
+authors:
+  - SuXuan_Dev
+load: POSTWORLD
+softdepend:
+  - PlaceholderAPI
+  - WorldGuard
