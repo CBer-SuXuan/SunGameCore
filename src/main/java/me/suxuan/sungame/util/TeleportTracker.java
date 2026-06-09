@@ -47,6 +47,14 @@ public final class TeleportTracker {
 		return targetWorld.getName().equals(pendingTargets.get(player.getUniqueId()));
 	}
 
+	public boolean isPending(@NotNull Player player) {
+		return pendingTargets.containsKey(player.getUniqueId());
+	}
+
+	public String pendingWorldName(@NotNull Player player) {
+		return pendingTargets.get(player.getUniqueId());
+	}
+
 	public void clear(@NotNull Player player) {
 		pendingTargets.remove(player.getUniqueId());
 	}

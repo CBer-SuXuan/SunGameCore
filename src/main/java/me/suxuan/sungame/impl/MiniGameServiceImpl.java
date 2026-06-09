@@ -2,10 +2,21 @@ package me.suxuan.sungame.impl;
 
 import me.suxuan.slimearena.api.ArenaManager;
 import me.suxuan.sungame.SunGameCorePlugin;
+import me.suxuan.sungame.api.bossbar.BukkitGameBossBarService;
+import me.suxuan.sungame.api.bossbar.GameBossBarService;
+import me.suxuan.sungame.api.boundary.BoundaryWatcher;
+import me.suxuan.sungame.api.boundary.BukkitBoundaryWatcher;
+import me.suxuan.sungame.api.cleanup.BukkitGameCleanupService;
+import me.suxuan.sungame.api.cleanup.GameCleanupService;
 import me.suxuan.sungame.api.MiniGameService;
 import me.suxuan.sungame.api.queue.QueueCallbacks;
 import me.suxuan.sungame.api.queue.QueueManager;
 import me.suxuan.sungame.api.queue.QueueSettings;
+import me.suxuan.sungame.api.session.GameSession;
+import me.suxuan.sungame.api.spectator.BukkitSpectatorService;
+import me.suxuan.sungame.api.spectator.SpectatorService;
+import me.suxuan.sungame.api.task.BukkitGameTaskRegistry;
+import me.suxuan.sungame.api.task.GameTaskRegistry;
 import me.suxuan.sungame.util.TeleportTracker;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +44,31 @@ public final class MiniGameServiceImpl implements MiniGameService {
 	@Override
 	public @NotNull TeleportTracker createTeleportTracker(@NotNull JavaPlugin owner) {
 		return new TeleportTracker(owner);
+	}
+
+	@Override
+	public @NotNull GameTaskRegistry createTaskRegistry(@NotNull JavaPlugin owner) {
+		return new BukkitGameTaskRegistry(owner);
+	}
+
+	@Override
+	public @NotNull <G extends GameSession> SpectatorService<G> createSpectatorService(@NotNull JavaPlugin owner) {
+		return new BukkitSpectatorService<>(owner);
+	}
+
+	@Override
+	public @NotNull <G extends GameSession> GameBossBarService<G> createBossBarService(@NotNull JavaPlugin owner) {
+		return new BukkitGameBossBarService<>();
+	}
+
+	@Override
+	public @NotNull <G extends GameSession> BoundaryWatcher<G> createBoundaryWatcher(@NotNull JavaPlugin owner, @NotNull GameTaskRegistry taskRegistry) {
+		return new BukkitBoundaryWatcher<>(taskRegistry);
+	}
+
+	@Override
+	public @NotNull <G extends GameSession> GameCleanupService<G> createCleanupService(@NotNull JavaPlugin owner, @NotNull GameTaskRegistry taskRegistry) {
+		return new BukkitGameCleanupService<>(owner, arenaManager, taskRegistry);
 	}
 
 	public void stopAllQueues() {

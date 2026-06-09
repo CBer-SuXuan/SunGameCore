@@ -43,17 +43,17 @@ public final class CommonProtectionListener<G extends GameSession> implements Li
 
 	@EventHandler(ignoreCancelled = true)
 	public void onInventoryOpen(InventoryOpenEvent event) {
-		if (event.getPlayer() instanceof Player player && provider.isManaged(player) && policy.cancelInventory(player)) event.setCancelled(true);
+		if (event.getPlayer() instanceof Player player && provider.isManaged(player) && policy.cancelInventoryOpen(player)) event.setCancelled(true);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (event.getWhoClicked() instanceof Player player && provider.isManaged(player) && policy.cancelInventory(player)) event.setCancelled(true);
+		if (event.getWhoClicked() instanceof Player player && provider.isManaged(player) && policy.cancelInventoryClick(player)) event.setCancelled(true);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onInventoryDrag(InventoryDragEvent event) {
-		if (event.getWhoClicked() instanceof Player player && provider.isManaged(player) && policy.cancelInventory(player)) event.setCancelled(true);
+		if (event.getWhoClicked() instanceof Player player && provider.isManaged(player) && policy.cancelInventoryDrag(player)) event.setCancelled(true);
 	}
 
 	@EventHandler(ignoreCancelled = true)

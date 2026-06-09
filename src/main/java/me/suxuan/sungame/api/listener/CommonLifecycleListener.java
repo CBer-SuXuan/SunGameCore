@@ -30,10 +30,16 @@ import java.util.Optional;
 public final class CommonLifecycleListener<G extends GameSession> implements Listener {
 	private final ManagedPlayerProvider<G> provider;
 	private final LifecycleCallbacks<G> callbacks;
+	private final ProtectionPolicy protectionPolicy;
 
 	public CommonLifecycleListener(@NotNull ManagedPlayerProvider<G> provider, @NotNull LifecycleCallbacks<G> callbacks) {
+		this(provider, callbacks, new ProtectionPolicy() {});
+	}
+
+	public CommonLifecycleListener(@NotNull ManagedPlayerProvider<G> provider, @NotNull LifecycleCallbacks<G> callbacks, @NotNull ProtectionPolicy protectionPolicy) {
 		this.provider = provider;
 		this.callbacks = callbacks;
+		this.protectionPolicy = protectionPolicy;
 	}
 
 	@EventHandler
@@ -42,6 +48,7 @@ public final class CommonLifecycleListener<G extends GameSession> implements Lis
 		Player player = event.getPlayer();
 		player.getInventory().clear();
 		PlayerStateUtil.reset(player);
+		if (callbacks.handleJoin(player)) return;
 		if (player.isOp()) {
 			World mainWorld = Bukkit.getWorld("world");
 			if (mainWorld == null) mainWorld = Bukkit.getWorlds().getFirst();
@@ -72,15 +79,15 @@ public final class CommonLifecycleListener<G extends GameSession> implements Lis
 		}
 	}
 
-	@EventHandler public void onDropItem(PlayerDropItemEvent event) { if (provider.isManaged(event.getPlayer())) event.setCancelled(true); }
-	@EventHandler public void onPickupArrow(PlayerPickupArrowEvent event) { if (provider.isManaged(event.getPlayer())) event.setCancelled(true); }
+	@EventHandler public void onDropItem(PlayerDropItemEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelItemDrop(event.getPlayer())) event.setCancelled(true); }
+	@EventHandler public void onPickupArrow(PlayerPickupArrowEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelItemPickup(event.getPlayer())) event.setCancelled(true); }
 	@EventHandler public void onPortal(PlayerPortalEvent event) { if (provider.isManaged(event.getPlayer())) event.setCancelled(true); }
-	@EventHandler public void onInteractEntity(PlayerInteractEntityEvent event) { if (provider.isManaged(event.getPlayer())) event.setCancelled(true); }
-	@EventHandler public void onSwapHandItems(PlayerSwapHandItemsEvent event) { if (provider.isManaged(event.getPlayer())) event.setCancelled(true); }
+	@EventHandler public void onInteractEntity(PlayerInteractEntityEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelEntityInteract(event.getPlayer())) event.setCancelled(true); }
+	@EventHandler public void onSwapHandItems(PlayerSwapHandItemsEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelSwapHandItems(event.getPlayer())) event.setCancelled(true); }
 
 	@EventHandler
 	public void onPickupItem(EntityPickupItemEvent event) {
-		if (event.getEntity() instanceof Player player && provider.isManaged(player)) event.setCancelled(true);
+		if (event.getEntity() instanceof Player player && provider.isManaged(player) && protectionPolicy.cancelItemPickup(player)) event.setCancelled(true);
 	}
 
 	@EventHandler

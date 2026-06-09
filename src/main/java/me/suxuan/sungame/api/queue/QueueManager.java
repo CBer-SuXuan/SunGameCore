@@ -10,7 +10,9 @@ import java.util.concurrent.CompletableFuture;
 public interface QueueManager {
 	@NotNull CompletableFuture<QueueArena> createQueue();
 	void joinQueue(@NotNull Player player);
+	@NotNull CompletableFuture<QueueJoinResult> joinQueueResult(@NotNull Player player);
 	boolean addToQueue(@NotNull Player player, @NotNull QueueArena queue);
+	@NotNull QueueJoinResult addToQueueResult(@NotNull Player player, @NotNull QueueArena queue);
 	boolean leaveQueue(@NotNull Player player);
 	void removePlayer(@NotNull Player player, boolean cleanupEmptyQueue);
 	void startCountdown(@NotNull QueueArena queue, boolean force);

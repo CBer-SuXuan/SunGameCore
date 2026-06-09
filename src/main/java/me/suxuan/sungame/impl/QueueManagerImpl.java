@@ -4,6 +4,8 @@ import me.suxuan.slimearena.api.ArenaManager;
 import me.suxuan.sungame.SunGameCorePlugin;
 import me.suxuan.sungame.api.queue.QueueArena;
 import me.suxuan.sungame.api.queue.QueueCallbacks;
+import me.suxuan.sungame.api.queue.QueueJoinResult;
+import me.suxuan.sungame.api.queue.QueueJoinStatus;
 import me.suxuan.sungame.api.queue.QueueManager;
 import me.suxuan.sungame.api.queue.QueueSettings;
 import me.suxuan.sungame.api.queue.QueueState;
@@ -69,26 +71,45 @@ public final class QueueManagerImpl implements QueueManager {
 
 	@Override
 	public void joinQueue(@NotNull Player player) {
-		if (playerQueues.containsKey(player.getUniqueId())) return;
-		QueueArena queue = findJoinableQueue();
-		if (queue != null) {
-			addToQueue(player, queue);
-			return;
+		joinQueueResult(player);
+	}
+
+	@Override
+	public @NotNull CompletableFuture<QueueJoinResult> joinQueueResult(@NotNull Player player) {
+		if (!player.isOnline()) return CompletableFuture.completedFuture(QueueJoinResult.fail(QueueJoinStatus.PLAYER_OFFLINE));
+		if (playerQueues.containsKey(player.getUniqueId())) {
+			return CompletableFuture.completedFuture(QueueJoinResult.fail(QueueJoinStatus.ALREADY_IN_QUEUE, playerQueues.get(player.getUniqueId())));
 		}
+		QueueArena queue = findJoinableQueue();
+		if (queue != null) return CompletableFuture.completedFuture(addToQueueResult(player, queue));
+		CompletableFuture<QueueJoinResult> result = new CompletableFuture<>();
 		createQueue().whenComplete((created, throwable) -> Bukkit.getScheduler().runTask(owner, () -> {
-			if (!player.isOnline()) return;
-			if (throwable != null) return;
+			if (!player.isOnline()) {
+				result.complete(QueueJoinResult.fail(QueueJoinStatus.PLAYER_OFFLINE));
+				return;
+			}
+			if (throwable != null) {
+				result.complete(QueueJoinResult.fail(QueueJoinStatus.CREATE_FAILED, throwable));
+				return;
+			}
 			QueueArena available = findJoinableQueue();
-			addToQueue(player, available == null ? created : available);
+			result.complete(addToQueueResult(player, available == null ? created : available));
 		}));
+		return result;
 	}
 
 	@Override
 	public boolean addToQueue(@NotNull Player player, @NotNull QueueArena queue) {
-		if (!player.isOnline()) return false;
-		if (!queues.contains(queue) || queue.state() == QueueState.CLOSED) return false;
-		if (queue.players().size() >= settings.maxPlayers()) return false;
-		if (playerQueues.containsKey(player.getUniqueId())) return false;
+		return addToQueueResult(player, queue).success();
+	}
+
+	@Override
+	public @NotNull QueueJoinResult addToQueueResult(@NotNull Player player, @NotNull QueueArena queue) {
+		if (!player.isOnline()) return QueueJoinResult.fail(QueueJoinStatus.PLAYER_OFFLINE, queue);
+		if (!queues.contains(queue)) return QueueJoinResult.fail(QueueJoinStatus.QUEUE_NOT_MANAGED, queue);
+		if (queue.state() == QueueState.CLOSED) return QueueJoinResult.fail(QueueJoinStatus.QUEUE_CLOSED, queue);
+		if (queue.players().size() >= settings.maxPlayers()) return QueueJoinResult.fail(QueueJoinStatus.QUEUE_FULL, queue);
+		if (playerQueues.containsKey(player.getUniqueId())) return QueueJoinResult.fail(QueueJoinStatus.ALREADY_IN_QUEUE, playerQueues.get(player.getUniqueId()));
 		queue.players().add(player.getUniqueId());
 		playerQueues.put(player.getUniqueId(), queue);
 		player.getInventory().clear();
@@ -100,7 +121,7 @@ public final class QueueManagerImpl implements QueueManager {
 		if (queue.players().size() >= settings.minPlayers() && queue.state() == QueueState.WAITING) {
 			startCountdown(queue, false);
 		}
-		return true;
+		return QueueJoinResult.success(queue);
 	}
 
 	@Override

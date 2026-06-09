@@ -1,8 +1,14 @@
 package me.suxuan.sungame.api;
 
+import me.suxuan.sungame.api.bossbar.GameBossBarService;
+import me.suxuan.sungame.api.boundary.BoundaryWatcher;
+import me.suxuan.sungame.api.cleanup.GameCleanupService;
 import me.suxuan.sungame.api.queue.QueueCallbacks;
 import me.suxuan.sungame.api.queue.QueueManager;
 import me.suxuan.sungame.api.queue.QueueSettings;
+import me.suxuan.sungame.api.session.GameSession;
+import me.suxuan.sungame.api.spectator.SpectatorService;
+import me.suxuan.sungame.api.task.GameTaskRegistry;
 import me.suxuan.sungame.util.TeleportTracker;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -32,4 +38,51 @@ public interface MiniGameService {
 	 */
 	@NotNull
 	TeleportTracker createTeleportTracker(@NotNull JavaPlugin owner);
+
+	/**
+	 * 创建一个通用任务注册表，用于按对局 ID 管理 Bukkit task。
+	 *
+	 * @param owner 使用该注册表的小游戏插件
+	 * @return 任务注册表
+	 */
+	@NotNull
+	GameTaskRegistry createTaskRegistry(@NotNull JavaPlugin owner);
+
+	/**
+	 * 创建一个通用旁观者服务。
+	 *
+	 * @param owner 使用该服务的小游戏插件
+	 * @return 旁观者服务
+	 */
+	@NotNull
+	<G extends GameSession> SpectatorService<G> createSpectatorService(@NotNull JavaPlugin owner);
+
+	/**
+	 * 创建一个通用 BossBar 服务。
+	 *
+	 * @param owner 使用该服务的小游戏插件
+	 * @return BossBar 服务
+	 */
+	@NotNull
+	<G extends GameSession> GameBossBarService<G> createBossBarService(@NotNull JavaPlugin owner);
+
+	/**
+	 * 创建一个通用边界检测器。
+	 *
+	 * @param owner        使用该检测器的小游戏插件
+	 * @param taskRegistry 该检测器复用的任务注册表
+	 * @return 边界检测器
+	 */
+	@NotNull
+	<G extends GameSession> BoundaryWatcher<G> createBoundaryWatcher(@NotNull JavaPlugin owner, @NotNull GameTaskRegistry taskRegistry);
+
+	/**
+	 * 创建一个通用游戏清理服务。
+	 *
+	 * @param owner        使用该服务的小游戏插件
+	 * @param taskRegistry 该服务复用的任务注册表
+	 * @return 游戏清理服务
+	 */
+	@NotNull
+	<G extends GameSession> GameCleanupService<G> createCleanupService(@NotNull JavaPlugin owner, @NotNull GameTaskRegistry taskRegistry);
 }

@@ -1,139 +1,44 @@
 # SunGameCore 使用文档
 
-SunGameCore 是一个面向 Minecraft Paper 小游戏服务器的通用核心库插件。它提供临时竞技场世界、匹配队列、对局模型、生命周期监听器、保护监听器、独立聊天、PlaceholderAPI 支持和常用工具类，帮助开发者更快编写小游戏插件。
+SunGameCore 是一个面向 Minecraft Paper 小游戏服务器的通用库插件。它不是某个具体小游戏，而是给其他小游戏插件复用的基础框架，主要负责临时竞技场世界、匹配队列、对局模型、通用监听器、旁观者、BossBar、战利品、清理流程、命令框架、PlaceholderAPI 和常用工具。
 
-> 推荐用于基于 Paper `1.21.11`、Java `21`、AdvancedSlimePaper 的小游戏服务器。
+推荐环境：
 
----
-
-## 1. SunGameCore 是什么
-
-SunGameCore 不是某一个具体小游戏，而是一个给其他小游戏插件调用的 lib 插件。
-
-它主要解决小游戏开发中的通用问题：
-
-- 从模板 `.slime` 世界快速创建临时竞技场世界
-- 游戏结束后安全卸载并丢弃临时世界
-- 自动清理临时世界中的残留玩家
-- 为不同小游戏创建独立队列管理器
-- 玩家自动加入队列
-- 队列人数达到条件后自动倒计时
-- 支持快速开始和满员快速倒计时
-- 玩家加入队列后自动清背包、重置状态、回血并传送
-- 提供通用对局接口和基础对局类
-- 提供通用生命周期监听器
-- 提供通用保护监听器
-- 提供游戏内/queue 内独立聊天监听器
-- 提供 PlaceholderAPI 占位符基类
-- 提供常用工具类，减少重复代码
+- Java 21
+- AdvancedSlimePaper 1.21.11 核心（必须使用，不能使用原始的paper核心，是paper的fork）
+  - Github：https://github.com/InfernalSuite/AdvancedSlimePaper
+  - Docs：https://infernalsuite.com/docs/asp/
+  - **Download**：https://infernalsuite.com/download/asp/
+- 可选：PlaceholderAPI
 
 ---
 
-## 2. 功能概览
+## 1. 安装方式
 
-### 2.1 临时竞技场世界
-
-SunGameCore 基于 AdvancedSlimePaper 管理临时小游戏世界：
-
-- 读取模板 `.slime` 世界
-- 异步复制模板世界
-- 创建临时世界实例
-- 自动设置常用 GameRule
-- 游戏结束后丢弃世界，不保存地图改动
-- 可选清理 WorldGuard 的世界缓存
-- 插件卸载时清理残留临时世界
-
-模板目录：
-
-```text
-plugins/SunGameCore/template
-```
-
-例如：
-
-```text
-plugins/SunGameCore/template/spleef_map.slime
-plugins/SunGameCore/template/tntrun_map.slime
-```
-
-### 2.2 小游戏队列
-
-SunGameCore 可以为每个小游戏创建独立的 `QueueManager`。
-
-队列系统支持：
-
-- 自动创建 queue 世界
-- 自动选择可加入队列
-- 队列不存在时自动创建
-- 最小人数倒计时
-- 快速人数倒计时
-- 满员 3 秒倒计时
-- 玩家离开队列
-- 空队列自动清理
-- 队列倒计时结束后回调给小游戏插件创建正式对局
-
-### 2.3 通用监听器
-
-SunGameCore 提供多个可选监听器：
-
-| 监听器 | 作用 |
-| --- | --- |
-| `CommonLifecycleListener` | 处理进服、退服、死亡、重生、饥饿、回血、基础交互限制 |
-| `CommonProtectionListener` | 处理破坏、放置、桶、背包、爆炸、伤害保护 |
-| `CommonChatListener` | 隔离游戏聊天和 queue 聊天 |
-
-### 2.4 PlaceholderAPI 支持
-
-如果服务器安装 PlaceholderAPI，可以继承 `BaseMiniGameExpansion` 快速注册小游戏占位符。
-
----
-
-## 3. 安装要求
-
-### 3.1 必需环境
-
-- 核心：AdvancedSlimePaper（兼容任何Paper插件）
-- Java：`21`
-
-注：本插件必须使用 AdvancedSlimePaper 核心，下载链接在下方，插件启动时会检查 AdvancedSlimePaper API。如果环境不存在，插件会自动禁用。
-
-相关链接：
-
-- Github：https://github.com/InfernalSuite/AdvancedSlimePaper
-- Docs：https://infernalsuite.com/docs/asp/
-- **Download**：https://infernalsuite.com/download/asp/
-
-### 3.2 可选插件
-
-- `PlaceholderAPI`：用于占位符支持。
-
-### 3.3 不建议插件
-
-- `WorldGuard`：由于WorldGuard会针对该插件每一个世界进行保护并生成一个文件在插件文件夹下，如果世界被卸载掉之后，目前没有办法能将该文件夹直接删除，所以不建议使用WorldGuard，后续或许会加入兼容。
-
----
-
-## 4. 服务端安装
-
-将构建好的 jar 放入服务端：
+将构建好的 jar 放入服务器插件目录：
 
 ```text
 plugins/SunGameCore-1.0.0-SNAPSHOT.jar
 ```
 
-首次启动后，建议准备模板目录：
+如果你使用临时 `.slime` 世界，需要准备模板目录：
 
 ```text
 plugins/SunGameCore/template
 ```
 
-然后把小游戏地图模板 `.slime` 文件放入该目录。
+示例：
+
+```text
+plugins/SunGameCore/template/queue.slime
+plugins/SunGameCore/template/arena_default.slime
+```
 
 ---
 
-## 5. 在小游戏插件中引入 SunGameCore
+## 2. Maven 引入
 
-### 5.1 Maven 依赖
+小游戏插件中添加依赖：
 
 ```xml
 <dependency>
@@ -144,7 +49,7 @@ plugins/SunGameCore/template
 </dependency>
 ```
 
-Paper API：
+Paper API 示例：
 
 ```xml
 <dependency>
@@ -155,65 +60,58 @@ Paper API：
 </dependency>
 ```
 
-### 5.2 plugin.yml
+---
+
+## 3. plugin.yml 配置
+
+小游戏插件应依赖 SunGameCore：
 
 ```yaml
-name: ExampleMiniGame
+name: ExampleGame
 version: 1.0.0
-main: your.package.ExampleMiniGamePlugin
+main: your.package.ExampleGamePlugin
 api-version: '1.21.11'
 depend:
   - SunGameCore
-```
-
-如果你的小游戏插件使用 PlaceholderAPI：
-
-```yaml
 softdepend:
   - PlaceholderAPI
 ```
 
 ---
 
-## 6. SunGameCore 提供的服务
+## 4. 获取服务
 
-SunGameCore 启动后会注册两个 Bukkit Service：
+SunGameCore 会注册两个 Bukkit Service：
 
 ```java
 me.suxuan.slimearena.api.ArenaManager
 me.suxuan.sungame.api.MiniGameService
 ```
 
-| 服务 | 作用 |
-| --- | --- |
-| `ArenaManager` | 创建和销毁临时竞技场世界 |
-| `MiniGameService` | 创建队列管理器、创建传送追踪器 |
-
----
-
-## 7. 使用 ArenaManager
-
-`ArenaManager` 用于直接管理临时竞技场世界。
-
-### 7.1 获取 ArenaManager
+在小游戏插件中获取：
 
 ```java
-import me.suxuan.slimearena.api.ArenaManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
-
-RegisteredServiceProvider<ArenaManager> registration =
+RegisteredServiceProvider<ArenaManager> arenaRegistration =
         getServer().getServicesManager().getRegistration(ArenaManager.class);
 
-if (registration == null) {
-    getLogger().severe("无法获取 ArenaManager，请确认 SunGameCore 已启用。");
+RegisteredServiceProvider<MiniGameService> gameRegistration =
+        getServer().getServicesManager().getRegistration(MiniGameService.class);
+
+if (arenaRegistration == null || gameRegistration == null) {
+    getLogger().severe("无法获取 SunGameCore 服务。");
     getServer().getPluginManager().disablePlugin(this);
     return;
 }
 
-ArenaManager arenaManager = registration.getProvider();
+ArenaManager arenaManager = arenaRegistration.getProvider();
+MiniGameService miniGameService = gameRegistration.getProvider();
 ```
 
-### 7.2 ArenaManager API
+---
+
+## 5. ArenaManager：临时竞技场世界
+
+`ArenaManager` 用于从 `.slime` 模板创建临时世界，并在游戏结束后销毁。
 
 ```java
 public interface ArenaManager {
@@ -223,136 +121,52 @@ public interface ArenaManager {
 }
 ```
 
-### 7.3 创建临时世界
-
-假设模板文件为：
-
-```text
-plugins/SunGameCore/template/spleef_template.slime
-```
-
-创建临时世界：
+创建世界：
 
 ```java
-arenaManager.createArenaAsync("spleef_template", "spleef_game_001")
+arenaManager.createArenaAsync("arena_template", "game_" + System.currentTimeMillis())
         .thenAccept(world -> {
-            getLogger().info("临时竞技场创建成功: " + world.getName());
+            getLogger().info("创建竞技场成功: " + world.getName());
         })
         .exceptionally(throwable -> {
-            getLogger().warning("临时竞技场创建失败: " + throwable.getMessage());
+            getLogger().warning("创建竞技场失败: " + throwable.getMessage());
             return null;
         });
 ```
 
-参数说明：
-
-| 参数 | 说明 |
-| --- | --- |
-| `templateName` | 模板世界名称，不带 `.slime` 后缀 |
-| `instanceName` | 临时世界实例名称，需要保证唯一 |
-
-### 7.4 销毁临时世界
+销毁世界：
 
 ```java
-Location fallback = Bukkit.getWorld("world").getSpawnLocation();
-
-arenaManager.discardArenaAsync(world, fallback)
-        .thenRun(() -> getLogger().info("临时竞技场已销毁"))
-        .exceptionally(throwable -> {
-            getLogger().warning("临时竞技场销毁失败: " + throwable.getMessage());
-            return null;
-        });
-```
-
-如果 `fallbackLocation` 为 `null`，临时世界内仍然存在的玩家会被踢出服务器。
-
-### 7.5 判断世界是否为临时竞技场
-
-```java
-if (arenaManager.isArenaWorld(player.getWorld())) {
-    player.sendMessage(Component.text("你正在临时竞技场世界中"));
-}
+Location fallback = Bukkit.getWorlds().getFirst().getSpawnLocation();
+arenaManager.discardArenaAsync(world, fallback);
 ```
 
 ---
 
-## 8. 使用 MiniGameService
+## 6. MiniGameService 总览
 
-`MiniGameService` 是小游戏队列和通用工具服务。
-
-### 8.1 获取 MiniGameService
+`MiniGameService` 是小游戏功能入口：
 
 ```java
-import me.suxuan.sungame.api.MiniGameService;
-import org.bukkit.plugin.RegisteredServiceProvider;
-
-RegisteredServiceProvider<MiniGameService> registration =
-        getServer().getServicesManager().getRegistration(MiniGameService.class);
-
-if (registration == null) {
-    getLogger().severe("无法获取 MiniGameService，请确认 SunGameCore 已启用。");
-    getServer().getPluginManager().disablePlugin(this);
-    return;
-}
-
-MiniGameService miniGameService = registration.getProvider();
-```
-
-### 8.2 MiniGameService API
-
-```java
-public interface MiniGameService {
-    QueueManager createQueueManager(JavaPlugin owner, QueueSettings settings, QueueCallbacks callbacks);
-    TeleportTracker createTeleportTracker(JavaPlugin owner);
-}
+QueueManager createQueueManager(JavaPlugin owner, QueueSettings settings, QueueCallbacks callbacks);
+TeleportTracker createTeleportTracker(JavaPlugin owner);
+GameTaskRegistry createTaskRegistry(JavaPlugin owner);
+<G extends GameSession> SpectatorService<G> createSpectatorService(JavaPlugin owner);
+<G extends GameSession> GameBossBarService<G> createBossBarService(JavaPlugin owner);
+<G extends GameSession> BoundaryWatcher<G> createBoundaryWatcher(JavaPlugin owner, GameTaskRegistry taskRegistry);
+<G extends GameSession> GameCleanupService<G> createCleanupService(JavaPlugin owner, GameTaskRegistry taskRegistry);
 ```
 
 ---
 
-## 9. 队列系统
+## 7. QueueManager：匹配队列
 
-队列系统是 SunGameCore 的核心功能之一。它负责玩家匹配、临时 queue 世界创建、倒计时和队列清理。
-
-### 9.1 QueueSettings
-
-```java
-public record QueueSettings(
-        String idPrefix,
-        String templateWorld,
-        Location spawn,
-        int minPlayers,
-        int maxPlayers,
-        int longCountdownSeconds,
-        int quickCountdownSeconds,
-        int quickCountdownPercent
-) {}
-```
-
-字段说明：
-
-| 字段 | 说明 |
-| --- | --- |
-| `idPrefix` | 队列世界 ID 前缀，例如 `spleef` |
-| `templateWorld` | 模板 `.slime` 世界名称，不带后缀 |
-| `spawn` | 玩家进入 queue 世界后的出生点，world 可为 null |
-| `minPlayers` | 开始倒计时所需最小人数 |
-| `maxPlayers` | 队列最大人数 |
-| `longCountdownSeconds` | 普通倒计时秒数 |
-| `quickCountdownSeconds` | 快速倒计时秒数 |
-| `quickCountdownPercent` | 达到最大人数百分之多少后进入快速倒计时 |
-
-快速开始人数计算：
-
-```java
-quickStartPlayers = max(minPlayers, ceil(maxPlayers * quickCountdownPercent / 100.0))
-```
-
-### 9.2 创建 QueueManager
+### 7.1 QueueSettings
 
 ```java
 QueueSettings settings = new QueueSettings(
-        "spleef",
-        "spleef_queue_template",
+        "example",
+        "queue_template",
         new Location(null, 0.5, 80, 0.5, 0, 0),
         2,
         8,
@@ -360,29 +174,36 @@ QueueSettings settings = new QueueSettings(
         15,
         75
 );
+```
 
+字段含义：
+
+| 字段 | 说明 |
+| --- | --- |
+| `idPrefix` | 队列 ID 前缀 |
+| `templateWorld` | queue 世界模板名称，不带 `.slime` |
+| `spawn` | queue 世界内相对出生点，world 可为 null |
+| `minPlayers` | 开始倒计时最低人数 |
+| `maxPlayers` | 最大人数 |
+| `longCountdownSeconds` | 普通倒计时 |
+| `quickCountdownSeconds` | 快速倒计时 |
+| `quickCountdownPercent` | 达到最大人数百分比后进入快速倒计时 |
+
+### 7.2 创建队列管理器
+
+```java
 QueueManager queueManager = miniGameService.createQueueManager(this, settings, new QueueCallbacks() {
     @Override
-    public void onQueueCreated(QueueArena queue) {
-        getLogger().info("队列创建成功: " + queue.id());
-    }
-
-    @Override
     public void onPlayerJoinedQueue(Player player, QueueArena queue) {
-        player.sendMessage(Component.text("你已加入队列：" + queue.players().size() + "/" + queueManager.maxPlayers()));
-    }
-
-    @Override
-    public void onPlayerLeftQueue(Player player, QueueArena queue) {
-        player.sendMessage(Component.text("你已离开队列"));
+        player.sendMessage(Component.text("已加入队列"));
     }
 
     @Override
     public void onCountdownTick(QueueArena queue, int secondsLeft) {
         AudienceUtil.showQueueTitle(
                 queue,
+                Component.text(secondsLeft),
                 Component.text("游戏即将开始"),
-                Component.text(secondsLeft + " 秒"),
                 0,
                 20,
                 0
@@ -390,135 +211,32 @@ QueueManager queueManager = miniGameService.createQueueManager(this, settings, n
     }
 
     @Override
-    public void onCountdownCancelled(QueueArena queue) {
-        AudienceUtil.broadcastQueue(queue, Component.text("人数不足，倒计时已取消"));
-    }
-
-    @Override
     public void onQueueReady(QueueArena queue) {
-        startGameFromQueue(queue);
-    }
-
-    @Override
-    public void onQueueCreateFailed(Throwable throwable) {
-        getLogger().warning("队列创建失败: " + throwable.getMessage());
+        startGame(queue);
     }
 });
 ```
 
-### 9.3 QueueManager 常用方法
+### 7.3 常用方法
 
 ```java
 queueManager.joinQueue(player);
+queueManager.joinQueueResult(player);
 queueManager.leaveQueue(player);
 queueManager.queueOf(player);
 queueManager.queues();
+queueManager.startCountdown(queue, true);
 queueManager.cleanupQueue(queue, true);
 queueManager.stopAll();
 ```
 
-| 方法 | 说明 |
-| --- | --- |
-| `createQueue()` | 异步创建一个新的 queue 世界 |
-| `joinQueue(player)` | 自动加入可用队列，没有则自动创建 |
-| `addToQueue(player, queue)` | 加入指定队列 |
-| `leaveQueue(player)` | 离开当前队列 |
-| `removePlayer(player, cleanupEmptyQueue)` | 从队列移除玩家 |
-| `startCountdown(queue, force)` | 开始倒计时，`force=true` 时强制 3 秒 |
-| `cleanupQueue(queue, discardWorld)` | 清理队列，可选择是否销毁世界 |
-| `queueOf(player)` | 查询玩家所在队列 |
-| `queues()` | 获取当前队列快照 |
-| `updateSettings(settings)` | 更新队列配置 |
-| `stopAll()` | 停止所有队列 |
-
-### 9.4 QueueArena
-
-`QueueArena` 表示一个临时 queue 世界实例：
-
-```java
-public final class QueueArena {
-    public String id();
-    public World world();
-    public Set<UUID> players();
-    public QueueState state();
-}
-```
-
-队列状态：
-
-```java
-WAITING
-STARTING
-CLOSED
-```
-
-### 9.5 队列流程
-
-`joinQueue(player)` 大致会执行：
-
-1. 检查玩家是否已经在队列中
-2. 查找已有可加入队列
-3. 如果没有可加入队列，创建新的 queue 世界
-4. 将玩家加入队列
-5. 清空玩家背包
-6. 重置玩家状态并回血
-7. 设置玩家为冒险模式
-8. 传送到 queue 世界出生点
-9. 人数达到 `minPlayers` 后开始普通倒计时
-10. 人数达到 `quickStartPlayers` 后进入快速倒计时
-11. 人数达到 `maxPlayers` 后进入 3 秒倒计时
-12. 倒计时结束后触发 `onQueueReady(queue)`
-
 ---
 
-## 10. 从队列创建正式游戏
+## 8. 对局模型
 
-SunGameCore 不强制规定你的正式游戏逻辑。推荐在 `onQueueReady(queue)` 中创建自己的游戏对局对象。
+### 8.1 GameSession
 
-```java
-private final Map<UUID, ExampleGameSession> playerGames = new HashMap<>();
-private final Map<String, ExampleGameSession> games = new HashMap<>();
-
-private void startGameFromQueue(QueueArena queue) {
-    ExampleGameSession game = new ExampleGameSession(
-            queue.id().replace("_queue_", "_game_"),
-            queue.world(),
-            "default_map"
-    );
-
-    game.state(GameState.RUNNING);
-    game.players().addAll(queue.players());
-    game.alivePlayers().addAll(queue.players());
-
-    games.put(game.id(), game);
-
-    for (UUID uuid : game.players()) {
-        playerGames.put(uuid, game);
-        Player player = Bukkit.getPlayer(uuid);
-        if (player != null) {
-            PlayerStateUtil.prepareSurvival(player);
-            player.sendMessage(Component.text("游戏开始！"));
-        }
-    }
-
-    // 正式游戏继续使用 queue.world()，所以这里不要销毁世界
-    queueManager.cleanupQueue(queue, false);
-}
-```
-
-如果 queue 世界不再需要，可以调用：
-
-```java
-queueManager.cleanupQueue(queue, true);
-```
-
----
-
-## 11. 对局模型
-
-### 11.1 GameSession
-
-`GameSession` 是通用小游戏对局视图：
+小游戏对局需要实现 `GameSession`：
 
 ```java
 public interface GameSession {
@@ -532,294 +250,330 @@ public interface GameSession {
 }
 ```
 
-### 11.2 BaseGameSession
+### 8.2 BaseGameSession
 
-如果你的小游戏不需要复杂对局类，可以直接继承 `BaseGameSession`：
+推荐简单对局直接继承：
 
 ```java
-public final class ExampleGameSession extends BaseGameSession {
-    public ExampleGameSession(String id, World world, String mapId) {
+public final class ExampleGame extends BaseGameSession {
+    public ExampleGame(String id, World world, String mapId) {
         super(id, world, mapId);
     }
-
-    // 可以继续添加积分、队伍、回合数、地图配置等字段
 }
-```
-
-### 11.3 GameState
-
-```java
-WAITING
-STARTING
-RUNNING
-ENDING
 ```
 
 ---
 
-## 12. ManagedPlayerProvider
+## 9. ManagedPlayerProvider
 
-`ManagedPlayerProvider` 用于告诉 SunGameCore：玩家当前属于哪个游戏或队列。
-
-```java
-public interface ManagedPlayerProvider<G extends GameSession> {
-    JavaPlugin plugin();
-    Optional<G> gameOf(Player player);
-    Optional<G> gameByWorld(World world);
-    Optional<QueueArena> queueOf(Player player);
-
-    default boolean isManaged(Player player) {
-        return gameOf(player).isPresent() || queueOf(player).isPresent();
-    }
-
-    default boolean isEliminated(Player player) {
-        return gameOf(player)
-                .map(game -> !game.alivePlayers().contains(player.getUniqueId()))
-                .orElse(false);
-    }
-}
-```
-
-示例：
+通用监听器需要通过 `ManagedPlayerProvider` 查询玩家属于哪个游戏或队列。
 
 ```java
-public final class ExamplePlayerProvider implements ManagedPlayerProvider<ExampleGameSession> {
-    private final ExampleMiniGamePlugin plugin;
-
-    public ExamplePlayerProvider(ExampleMiniGamePlugin plugin) {
-        this.plugin = plugin;
-    }
-
+public final class ExampleProvider implements ManagedPlayerProvider<ExampleGame> {
     @Override
     public JavaPlugin plugin() {
         return plugin;
     }
 
     @Override
-    public Optional<ExampleGameSession> gameOf(Player player) {
-        return Optional.ofNullable(plugin.getPlayerGames().get(player.getUniqueId()));
+    public Optional<ExampleGame> gameOf(Player player) {
+        return Optional.ofNullable(playerGames.get(player.getUniqueId()));
     }
 
     @Override
-    public Optional<ExampleGameSession> gameByWorld(World world) {
-        return plugin.getGames().values().stream()
+    public Optional<ExampleGame> gameByWorld(World world) {
+        return games.values().stream()
                 .filter(game -> game.world().equals(world))
                 .findFirst();
     }
 
     @Override
     public Optional<QueueArena> queueOf(Player player) {
-        return plugin.getQueueManager().queueOf(player);
+        return queueManager.queueOf(player);
     }
 }
 ```
 
 ---
 
-## 13. 通用生命周期监听器
+## 10. 通用监听器
 
-`CommonLifecycleListener` 用于处理小游戏中常见的玩家生命周期事件。
+### 10.1 生命周期监听器
 
-注册示例：
+`CommonLifecycleListener` 处理：
+
+- 玩家进服
+- 玩家退服
+- 死亡与重生
+- 饥饿、回血、掉落、拾取等基础限制
+- 自动入队
+- 淘汰回调
 
 ```java
-getServer().getPluginManager().registerEvents(
-        new CommonLifecycleListener<>(provider, new LifecycleCallbacks<ExampleGameSession>() {
-            @Override
-            public boolean autoJoinQueue(Player player) {
-                return true;
-            }
-
-            @Override
-            public void joinQueue(Player player) {
-                queueManager.joinQueue(player);
-            }
-
-            @Override
-            public void handleQuit(Player player) {
-                queueManager.leaveQueue(player);
-                ExampleGameSession game = playerGames.remove(player.getUniqueId());
-                if (game != null) eliminate(player, "退出游戏");
-            }
-
-            @Override
-            public void eliminate(Player player, String reason) {
-                ExampleGameSession game = playerGames.get(player.getUniqueId());
-                if (game == null) return;
-                game.alivePlayers().remove(player.getUniqueId());
-                PlayerStateUtil.prepareSpectatorLike(player);
-                checkGameEnd(game);
-            }
-
-            @Override
-            public Location respawnLocation(Player player, ExampleGameSession game) {
-                return game.world().getSpawnLocation();
-            }
-        }),
+Bukkit.getPluginManager().registerEvents(
+        new CommonLifecycleListener<>(provider, lifecycleCallbacks, protectionPolicy),
         this
 );
 ```
 
-它会处理：
+### 10.2 保护监听器
 
-- 玩家进服
-- 自动入队
-- 饥饿锁定
-- 自然回血限制
-- 禁止丢物品、捡物品、副手交换等
-- 禁止传送门、末影珍珠、紫颂果等特殊传送
-- 死亡后调用淘汰回调
-- 自动重生并设置类旁观者状态
-- 玩家退服回调
+`CommonProtectionListener` 处理：
 
----
-
-## 14. 通用保护监听器
-
-`CommonProtectionListener` 用于保护 queue 和游戏世界。
-
-注册示例：
+- 方块破坏/放置
+- 桶操作
+- 爆炸破坏
+- 背包交互
+- queue 玩家伤害
+- 淘汰玩家伤害
 
 ```java
-getServer().getPluginManager().registerEvents(
+Bukkit.getPluginManager().registerEvents(
         new CommonProtectionListener<>(provider, new ProtectionPolicy() {}),
         this
 );
 ```
 
-默认策略较强：
-
-- 禁止桶操作
-- 禁止打开/点击/拖拽背包
-- 禁止放置方块
-- 禁止破坏方块
-- 清空游戏世界爆炸破坏列表
-- 取消 queue 玩家伤害
-- 取消淘汰玩家伤害
-- 取消 ENDING 阶段玩家伤害
-
-自定义示例：
+可以覆盖策略：
 
 ```java
 new ProtectionPolicy() {
     @Override
     public boolean cancelBlockBreak(Player player) {
-        // queue 和淘汰玩家不能破坏方块，游戏中存活玩家允许破坏
         return provider.queueOf(player).isPresent() || provider.isEliminated(player);
     }
 }
 ```
 
----
+### 10.3 聊天隔离监听器
 
-## 15. 独立聊天监听器
-
-`CommonChatListener` 用于隔离游戏和 queue 的聊天。
-
-注册示例：
+`CommonChatListener` 可以隔离游戏聊天和队列聊天：
 
 ```java
-getServer().getPluginManager().registerEvents(
-        new CommonChatListener<>(provider, new ChatPolicy<ExampleGameSession>() {}),
+Bukkit.getPluginManager().registerEvents(
+        new CommonChatListener<>(provider, new ChatPolicy<ExampleGame>() {}),
         this
 );
 ```
 
-默认规则：
+---
 
-- 游戏内聊天只给同一个 `GameSession` 的玩家看
-- queue 聊天只给同一个 `QueueArena` 的玩家看
-- 其他游戏、其他 queue、大厅都看不到
-- 未处于游戏或 queue 的玩家聊天不处理
-- 控制台默认也看不到隔离聊天
+## 11. GameTaskRegistry：任务管理
 
-允许控制台查看隔离聊天：
+用于按对局 ID 管理 Bukkit task。
 
 ```java
-new ChatPolicy<ExampleGameSession>() {
-    @Override
-    public boolean allowConsoleSeeGameChat(Player player, ExampleGameSession game) {
-        return true;
-    }
+GameTaskRegistry tasks = miniGameService.createTaskRegistry(this);
 
-    @Override
-    public boolean allowConsoleSeeQueueChat(Player player, QueueArena queue) {
-        return true;
-    }
-}
-```
+tasks.repeat(game.id(), "timer", 20L, 20L, () -> {
+    // 每秒执行
+});
 
-只隔离游戏聊天，不隔离 queue 聊天：
+tasks.runLater(game.id(), "ending", 100L, () -> {
+    // 延迟执行
+});
 
-```java
-new ChatPolicy<ExampleGameSession>() {
-    @Override
-    public boolean isolateQueueChat(Player player, QueueArena queue) {
-        return false;
-    }
-}
+tasks.cancel(game.id(), "timer");
+tasks.cancelAll(game.id());
+tasks.cancelAll();
 ```
 
 ---
 
-## 16. PlaceholderAPI 支持
+## 12. BoundaryWatcher：边界检测
 
-如果服务器安装了 PlaceholderAPI，可以继承 `BaseMiniGameExpansion` 快速注册占位符。
-
-### 16.1 默认占位符
-
-假设 identifier 是 `examplegame`：
-
-| 占位符 | 说明 |
-| --- | --- |
-| `%examplegame_area_type%` | 玩家所在区域：`game`、`queue`、`none` |
-| `%examplegame_area_id%` | 当前游戏或队列 ID |
-| `%examplegame_map%` | 地图 ID，队列中返回 `queue` |
-| `%examplegame_alive%` | 当前游戏存活人数 |
-| `%examplegame_players%` | 当前游戏或队列人数 |
-| `%examplegame_queue_players%` | 当前队列人数 |
-| `%examplegame_max_players%` | 最大人数 |
-| `%examplegame_min_players%` | 最小人数 |
-| `%examplegame_eliminated%` | 玩家是否已淘汰 |
-
-### 16.2 创建 Expansion
+用于检测玩家是否离开竞技场、掉入虚空或超出区域。
 
 ```java
-public final class ExampleExpansion extends BaseMiniGameExpansion<ExampleGameSession> {
-    public ExampleExpansion(PlaceholderValueProvider<ExampleGameSession> provider) {
+BoundaryWatcher<ExampleGame> boundaries = miniGameService.createBoundaryWatcher(this, tasks);
+
+boundaries.watch(
+        game,
+        List.of(
+                BoundaryRule.outsideWorld("离开竞技场"),
+                BoundaryRule.belowY(-20, "掉入虚空")
+        ),
+        (player, currentGame, reason) -> eliminate(player, reason),
+        20L,
+        5L
+);
+```
+
+可用规则：
+
+```java
+BoundaryRule.belowY(minY, reason)
+BoundaryRule.outsideWorld(reason)
+BoundaryRule.outsideWorldIgnoringPendingTeleport(teleportTracker, reason)
+BoundaryRule.outsideBox(min, max, reason)
+BoundaryRule.outsideRadius(center, radius, reason)
+```
+
+---
+
+## 13. SpectatorService：旁观者服务
+
+用于处理淘汰后的类旁观状态、可见性和离开物品。
+
+```java
+SpectatorService<ExampleGame> spectators = miniGameService.createSpectatorService(this);
+
+spectators.makeSpectator(
+        player,
+        game,
+        SpectatorOptions.of(game.world().getSpawnLocation(), leaveItem)
+);
+
+spectators.showToGame(player, game);
+spectators.showAll(game);
+spectators.clear(player);
+spectators.clearAll(game);
+```
+
+---
+
+## 14. GameBossBarService：BossBar 服务
+
+用于按玩家维护 BossBar，适合显示队列人数、倒计时、保护期、游戏时间等。
+
+```java
+GameBossBarService<ExampleGame> bossBars = miniGameService.createBossBarService(this);
+
+bossBars.showQueue(
+        queue,
+        Component.text("匹配中 " + queue.players().size()),
+        queue.players().size() / 8.0F,
+        BossBar.Color.BLUE
+);
+
+bossBars.showGame(
+        game,
+        Component.text("剩余 " + seconds + " 秒"),
+        seconds / 600.0F,
+        BossBar.Color.RED
+);
+
+bossBars.clear(player);
+bossBars.clearGame(game);
+bossBars.clearAll();
+```
+
+---
+
+## 15. GameCleanupService：游戏清理
+
+用于游戏结束后的玩家清理、任务取消、世界销毁。
+
+```java
+GameCleanupService<ExampleGame> cleanup = miniGameService.createCleanupService(this, tasks);
+
+cleanup.cleanup(
+        game,
+        GameCleanupOptions.discardWorld(endingDelayTicks, 100L, fallbackLocation),
+        (player, currentGame) -> {
+            PlayerStateUtil.prepareAdventure(player);
+            queueManager.joinQueue(player);
+        },
+        () -> spectators.showAll(game),
+        () -> spectators.clearAll(game)
+);
+```
+
+---
+
+## 16. Loot 战利品系统
+
+### 16.1 配置示例
+
+```yaml
+loot:
+  default-tier: normal
+  tiers:
+    normal:
+      min-items-per-chest: 5
+      max-items-per-chest: 8
+      entries:
+        iron_sword:
+          material: IRON_SWORD
+          min-amount: 1
+          max-amount: 1
+          weight: 5
+          name: "<gold>强化铁剑"
+          enchantments:
+            sharpness: 1
+```
+
+### 16.2 读取和填充
+
+```java
+LootRegistry registry = LootRegistry.fromSection(config.getConfigurationSection("loot"));
+LootTable table = registry.table("normal");
+table.fill(inventory, random);
+```
+
+### 16.3 按距离选择 tier
+
+```java
+DistanceLootSelector selector = DistanceLootSelector.fromSection(section, center, registry);
+String tier = selector.tierFor(chestLocation);
+selector.lootRegistry().table(tier).fill(inventory, random);
+```
+
+---
+
+## 17. 命令框架
+
+`MiniCommandExecutor` 用于快速编写子命令。
+
+```java
+MiniCommandExecutor executor = MiniCommandExecutor.builder()
+        .usage("<yellow>用法: /<label> <join|leave|status>")
+        .unknownMessage("<red>未知子命令")
+        .playerOnlyMessage("<red>只有玩家可以执行")
+        .register(MiniCommand.builder("join")
+                .playerOnly(true)
+                .executor(context -> {
+                    Player player = context.playerOrNull();
+                    if (player != null) queueManager.joinQueue(player);
+                })
+                .build())
+        .build();
+```
+
+---
+
+## 18. PlaceholderAPI 支持
+
+继承 `BaseMiniGameExpansion`：
+
+```java
+public final class ExampleExpansion extends BaseMiniGameExpansion<ExampleGame> {
+    public ExampleExpansion(PlaceholderValueProvider<ExampleGame> provider) {
         super(provider);
     }
 
     @Override
     public String getIdentifier() {
-        return "examplegame";
+        return "example";
     }
 
     @Override
     public String getAuthor() {
-        return "YourName";
+        return "author";
     }
 
     @Override
     public String getVersion() {
-        return "1.0.0";
+        return "1.0";
     }
-}
-```
-
-注册：
-
-```java
-if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-    new ExampleExpansion(new ExamplePlaceholderProvider(this)).register();
 }
 ```
 
 ---
 
-## 17. 工具类
+## 19. 常用工具
 
-### 17.1 PlayerStateUtil
+### 19.1 PlayerStateUtil
 
 ```java
 PlayerStateUtil.reset(player);
@@ -829,30 +583,22 @@ PlayerStateUtil.prepareSurvival(player);
 PlayerStateUtil.prepareSpectatorLike(player);
 ```
 
-| 方法 | 说明 |
-| --- | --- |
-| `reset` | 重置飞行、无敌、火焰、冰冻、饱食度、经验、药水效果等 |
-| `healToMax` | 回满血 |
-| `prepareAdventure` | 清背包、重置、回血、设置冒险模式 |
-| `prepareSurvival` | 清背包、重置、回血、设置生存模式 |
-| `prepareSpectatorLike` | 设置类旁观者状态：可飞行、无敌、无碰撞 |
-
-### 17.2 AudienceUtil
+### 19.2 LocationUtil
 
 ```java
-AudienceUtil.broadcastQueue(queue, Component.text("队列消息"));
-AudienceUtil.broadcastGame(game, Component.text("游戏消息"));
-AudienceUtil.showQueueTitle(queue, title, subtitle, 10, 40, 10);
-AudienceUtil.showGameTitle(game, title, subtitle, 10, 40, 10);
+Location actual = LocationUtil.withWorld(relativeLocation, world);
 ```
 
-### 17.3 LocationUtil
+### 19.3 AudienceUtil
 
 ```java
-Location actual = LocationUtil.withWorld(relativeLocation, queue.world());
+AudienceUtil.broadcastQueue(queue, component);
+AudienceUtil.broadcastGame(game, component);
+AudienceUtil.showQueueTitle(queue, title, subtitle, 0, 20, 0);
+AudienceUtil.showGameTitle(game, title, subtitle, 0, 20, 0);
 ```
 
-### 17.4 TeleportTracker
+### 19.4 TeleportTracker
 
 ```java
 TeleportTracker tracker = miniGameService.createTeleportTracker(this);
@@ -862,125 +608,84 @@ tracker.clear(player);
 tracker.clearAll();
 ```
 
-`TeleportTracker` 适合用于区分“插件内部传送”和“玩家主动离开竞技场”。
+### 19.5 GameItemUtil
 
----
-
-## 18. 推荐插件结构
-
-```text
-ExampleMiniGamePlugin
-├─ onEnable()
-│  ├─ 获取 MiniGameService
-│  ├─ 创建 QueueManager
-│  ├─ 创建 TeleportTracker
-│  ├─ 创建 ManagedPlayerProvider
-│  ├─ 注册 CommonLifecycleListener
-│  ├─ 注册 CommonProtectionListener
-│  ├─ 注册 CommonChatListener
-│  ├─ 注册命令，例如 /join /leave /start
-│  └─ 注册 PlaceholderAPI Expansion
-├─ Map<UUID, ExampleGameSession> playerGames
-├─ Map<String, ExampleGameSession> games
-├─ startGameFromQueue(QueueArena queue)
-├─ eliminate(Player player, String reason)
-├─ checkGameEnd(ExampleGameSession game)
-└─ endGame(ExampleGameSession game)
-```
-
----
-
-## 19. 最小初始化示例
+用于给特殊物品打标记。
 
 ```java
-public final class ExampleMiniGamePlugin extends JavaPlugin {
-    private MiniGameService miniGameService;
-    private QueueManager queueManager;
-    private TeleportTracker teleportTracker;
+GameItemUtil.setActionKey(item, "example:special_item");
+GameItemUtil.isActionItem(item, "example:special_item");
+GameItemUtil.actionKey(item);
+```
 
-    @Override
-    public void onEnable() {
-        RegisteredServiceProvider<MiniGameService> registration =
-                getServer().getServicesManager().getRegistration(MiniGameService.class);
+配置物品也支持：
 
-        if (registration == null) {
-            getLogger().severe("无法获取 SunGameCore 服务。");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
-
-        this.miniGameService = registration.getProvider();
-        this.teleportTracker = miniGameService.createTeleportTracker(this);
-
-        setupQueue();
-
-        ExamplePlayerProvider provider = new ExamplePlayerProvider(this);
-
-        getServer().getPluginManager().registerEvents(
-                new CommonLifecycleListener<>(provider, lifecycleCallbacks()),
-                this
-        );
-
-        getServer().getPluginManager().registerEvents(
-                new CommonProtectionListener<>(provider, new ProtectionPolicy() {}),
-                this
-        );
-
-        getServer().getPluginManager().registerEvents(
-                new CommonChatListener<>(provider, new ChatPolicy<ExampleGameSession>() {}),
-                this
-        );
-    }
-}
+```yaml
+special_item:
+  material: BLAZE_ROD
+  name: "<gold>特殊道具"
+  action-key: example:special_item
 ```
 
 ---
 
-## 20. API 包结构
+## 20. 配置工具
+
+### 20.1 ItemStackConfigUtil
+
+支持：
+
+- material
+- amount
+- name
+- lore
+- custom-model-data
+- unbreakable
+- flags
+- enchantments
+- attributes
+- action-key
+
+### 20.2 LocationConfigUtil
+
+```yaml
+spawn:
+  x: 0.5
+  y: 80
+  z: 0.5
+  yaw: 0
+  pitch: 0
+```
+
+```java
+Location location = LocationConfigUtil.readRelative(section);
+```
+
+---
+
+## 21. 推荐小游戏结构
 
 ```text
-me.suxuan.slimearena.api
-└─ ArenaManager
-
-me.suxuan.sungame
-└─ SunGameCorePlugin
-
-me.suxuan.sungame.api
-├─ MiniGameService
-├─ queue
-│  ├─ QueueManager
-│  ├─ QueueSettings
-│  ├─ QueueCallbacks
-│  ├─ QueueArena
-│  └─ QueueState
-├─ session
-│  ├─ GameSession
-│  ├─ BaseGameSession
-│  ├─ GameState
-│  └─ ManagedPlayerProvider
-├─ listener
-│  ├─ CommonLifecycleListener
-│  ├─ LifecycleCallbacks
-│  ├─ CommonProtectionListener
-│  ├─ ProtectionPolicy
-│  ├─ CommonChatListener
-│  └─ ChatPolicy
-└─ placeholder
-   ├─ BaseMiniGameExpansion
-   └─ PlaceholderValueProvider
-
-me.suxuan.sungame.util
-├─ AudienceUtil
-├─ LocationUtil
-├─ PlayerStateUtil
-└─ TeleportTracker
+ExampleGamePlugin
+├─ onEnable()
+│  ├─ 获取 ArenaManager 和 MiniGameService
+│  ├─ 创建 QueueManager
+│  ├─ 创建 TaskRegistry / BoundaryWatcher / CleanupService
+│  ├─ 创建 SpectatorService / BossBarService
+│  ├─ 注册通用监听器
+│  ├─ 注册自定义玩法监听器
+│  └─ 注册命令和 PlaceholderAPI
+├─ GameManager
+│  ├─ startGameFromQueue(queue)
+│  ├─ eliminate(player, reason)
+│  ├─ checkWin(game)
+│  └─ endGame(game)
+└─ GameSession 实现类
 ```
 
 ---
 
-## 21. 构建 SunGameCore
-
-在项目根目录执行：
+## 22. 构建
 
 ```bash
 mvn clean package
@@ -991,5 +696,3 @@ mvn clean package
 ```text
 target/SunGameCore-1.0.0-SNAPSHOT.jar
 ```
-
-将 jar 放入服务端 `plugins` 目录即可。
