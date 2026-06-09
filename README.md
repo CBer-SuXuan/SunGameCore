@@ -18,7 +18,7 @@ SunGameCore 是一个面向 Minecraft Paper 小游戏服务器的通用库插件
 将构建好的 jar 放入服务器插件目录：
 
 ```text
-plugins/SunGameCore-1.0.0-SNAPSHOT.jar
+plugins/SunGameCore.jar
 ```
 
 如果你使用临时 `.slime` 世界，需要准备模板目录：
@@ -36,18 +36,55 @@ plugins/SunGameCore/template/arena_default.slime
 
 ---
 
-## 2. Maven 引入
+## 2. 通过 JitPack 引入
 
-小游戏插件中添加依赖：
+SunGameCore 已发布到 JitPack，其他小游戏插件可以直接通过 JitPack 引入 API。
+
+JitPack 页面：
+
+```text
+https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.0.1
+```
+
+### 2.1 Maven 示例
+
+先添加 JitPack 仓库：
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+
+再添加依赖：
 
 ```xml
 <dependency>
-    <groupId>me.suxuan</groupId>
+    <groupId>com.github.cber-suxuan</groupId>
     <artifactId>SunGameCore</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>v1.0.1</version>
     <scope>provided</scope>
 </dependency>
 ```
+
+`scope` 使用 `provided`，因为 SunGameCore 是运行时 Bukkit 插件，服务器 `plugins` 目录中仍然需要放入 SunGameCore jar。不要把 SunGameCore shade 进小游戏插件 jar。
+
+### 2.2 Gradle 示例
+
+```gradle
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compileOnly 'com.github.cber-suxuan:SunGameCore:v1.0.1'
+}
+```
+
+### 2.3 Paper API 示例
 
 Paper API 示例：
 
