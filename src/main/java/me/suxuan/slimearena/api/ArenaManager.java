@@ -1,5 +1,6 @@
 package me.suxuan.slimearena.api;
 
+import me.suxuan.sungame.api.world.WorldRuleProfile;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -18,10 +19,11 @@ public interface ArenaManager {
 	 *
 	 * @param templateName 模板世界的名称（对应 templates 文件夹下的 .slime 文件名，不带后缀）
 	 * @param instanceName 将要创建的临时世界实例名称（例如 "bedwars_map1_game8"）
+	 * @param ruleProfile  使用方显式声明的世界规则配置。如果不想设置任何规则，也必须传入 WorldRuleProfile.empty()。
 	 * @return CompletableFuture 包含创建成功后的 Bukkit World 对象。如果失败则抛出异常。
 	 */
 	@NotNull
-	CompletableFuture<World> createArenaAsync(@NotNull String templateName, @NotNull String instanceName);
+	CompletableFuture<World> createArenaAsync(@NotNull String templateName, @NotNull String instanceName, @NotNull WorldRuleProfile ruleProfile);
 
 	/**
 	 * 安全地销毁并卸载一个临时世界。

@@ -53,7 +53,7 @@ public final class QueueManagerImpl implements QueueManager {
 		String id = settings.idPrefix() + "_queue_" + System.currentTimeMillis();
 		CompletableFuture<QueueArena> future = new CompletableFuture<>();
 		pendingQueueCreation = future;
-		arenaManager.createArenaAsync(settings.templateWorld(), id).whenComplete((world, throwable) -> Bukkit.getScheduler().runTask(owner, () -> {
+		arenaManager.createArenaAsync(settings.templateWorld(), id, settings.worldRules()).whenComplete((world, throwable) -> Bukkit.getScheduler().runTask(owner, () -> {
 			creatingQueue = false;
 			pendingQueueCreation = null;
 			if (throwable != null) {

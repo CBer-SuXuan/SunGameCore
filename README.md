@@ -43,7 +43,7 @@ SunGameCore 已发布到 JitPack，其他小游戏插件可以直接通过 JitPa
 JitPack 页面：
 
 ```text
-https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.0.3
+https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.1.0
 ```
 
 ### 2.1 Maven 示例
@@ -65,7 +65,7 @@ https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.0.3
 <dependency>
     <groupId>com.github.cber-suxuan</groupId>
     <artifactId>SunGameCore</artifactId>
-    <version>v1.0.3</version>
+    <version>v1.1.0</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -80,7 +80,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.cber-suxuan:SunGameCore:v1.0.3'
+    compileOnly 'com.github.cber-suxuan:SunGameCore:v1.1.0'
 }
 ```
 
@@ -150,9 +150,15 @@ MiniGameService miniGameService = gameRegistration.getProvider();
 
 `ArenaManager` 用于从 `.slime` 模板创建临时世界，并在游戏结束后销毁。
 
+SunGameCore 不会为临时世界内置任何默认 Bukkit `GameRule`。所有世界规则必须由使用库的小游戏插件显式传入。如果你确实希望完全沿用模板世界原始规则，也必须显式传入：
+
+```java
+WorldRuleProfile.empty()
+```
+
 ```java
 public interface ArenaManager {
-    CompletableFuture<World> createArenaAsync(String templateName, String instanceName);
+    CompletableFuture<World> createArenaAsync(String templateName, String instanceName, WorldRuleProfile ruleProfile);
     CompletableFuture<Void> discardArenaAsync(World world, Location fallbackLocation);
     boolean isArenaWorld(World world);
 }
@@ -161,7 +167,13 @@ public interface ArenaManager {
 创建世界：
 
 ```java
-arenaManager.createArenaAsync("arena_template", "game_" + System.currentTimeMillis())
+WorldRuleProfile gameRules = WorldRuleProfile.empty()
+        .set(GameRule.DO_DAYLIGHT_CYCLE, false)
+        .set(GameRule.DO_WEATHER_CYCLE, false)
+        .set(GameRule.DO_MOB_SPAWNING, false)
+        .set(GameRule.KEEP_INVENTORY, true);
+
+arenaManager.createArenaAsync("arena_template", "game_" + System.currentTimeMillis(), gameRules)
         .thenAccept(world -> {
             getLogger().info("创建竞技场成功: " + world.getName());
         })
@@ -201,6 +213,12 @@ GameTaskRegistry createTaskRegistry(JavaPlugin owner);
 ### 7.1 QueueSettings
 
 ```java
+WorldRuleProfile queueRules = WorldRuleProfile.empty()
+        .set(GameRule.DO_DAYLIGHT_CYCLE, false)
+        .set(GameRule.DO_WEATHER_CYCLE, false)
+        .set(GameRule.DO_MOB_SPAWNING, false)
+        .set(GameRule.KEEP_INVENTORY, true);
+
 QueueSettings settings = new QueueSettings(
         "example",
         "queue_template",
@@ -209,7 +227,8 @@ QueueSettings settings = new QueueSettings(
         8,
         60,
         15,
-        75
+        75,
+        queueRules
 );
 ```
 
@@ -225,6 +244,7 @@ QueueSettings settings = new QueueSettings(
 | `longCountdownSeconds` | 普通倒计时 |
 | `quickCountdownSeconds` | 快速倒计时 |
 | `quickCountdownPercent` | 达到最大人数百分比后进入快速倒计时 |
+| `worldRules` | queue 世界规则配置，必须显式传入 |
 
 ### 7.2 创建队列管理器
 

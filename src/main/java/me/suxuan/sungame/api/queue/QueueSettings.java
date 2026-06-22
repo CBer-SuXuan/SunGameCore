@@ -1,7 +1,10 @@
 package me.suxuan.sungame.api.queue;
 
+import me.suxuan.sungame.api.world.WorldRuleProfile;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 /**
  * 单个小游戏独立的 queue 配置。
@@ -14,7 +17,8 @@ public record QueueSettings(
 		int maxPlayers,
 		int longCountdownSeconds,
 		int quickCountdownSeconds,
-		int quickCountdownPercent
+		int quickCountdownPercent,
+		@NotNull WorldRuleProfile worldRules
 ) {
 	public QueueSettings {
 		if (idPrefix.isBlank()) throw new IllegalArgumentException("队列 idPrefix 不能为空");
@@ -26,6 +30,7 @@ public record QueueSettings(
 		if (quickCountdownSeconds < 1) quickCountdownSeconds = 1;
 		quickCountdownPercent = Math.clamp(quickCountdownPercent, 1, 100);
 		spawn = spawn.clone();
+		worldRules = Objects.requireNonNull(worldRules, "QueueSettings worldRules 不能为空，必须显式传入 WorldRuleProfile.empty() 或自定义规则配置");
 	}
 
 	public int quickStartPlayers() {

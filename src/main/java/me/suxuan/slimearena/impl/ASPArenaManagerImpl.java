@@ -10,9 +10,9 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import me.suxuan.sungame.SunGameCorePlugin;
 import me.suxuan.slimearena.api.ArenaManager;
+import me.suxuan.sungame.api.world.WorldRuleProfile;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -46,7 +46,8 @@ public class ASPArenaManagerImpl implements ArenaManager {
 	}
 
 	@Override
-	public @NotNull CompletableFuture<World> createArenaAsync(@NotNull String templateName, @NotNull String instanceName) {
+	public @NotNull CompletableFuture<World> createArenaAsync(@NotNull String templateName, @NotNull String instanceName, @NotNull WorldRuleProfile ruleProfile) {
+		if (ruleProfile == null) throw new IllegalArgumentException("ruleProfile 不能为空，必须显式传入 WorldRuleProfile.empty() 或自定义规则配置");
 		CompletableFuture<World> future = new CompletableFuture<>();
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 			try {
@@ -67,27 +68,7 @@ public class ASPArenaManagerImpl implements ArenaManager {
 							throw new RuntimeException("Slime世界已生成，但无法在 Bukkit 中找到世界实例：" + instanceName); //
 						}
 
-						bukkitWorld.setGameRule(GameRules.ADVANCE_TIME, false);
-						bukkitWorld.setGameRule(GameRules.ADVANCE_WEATHER, false);
-						bukkitWorld.setGameRule(GameRules.ALLOW_ENTERING_NETHER_USING_PORTALS, false);
-						bukkitWorld.setGameRule(GameRules.BLOCK_DROPS, false);
-						bukkitWorld.setGameRule(GameRules.DROWNING_DAMAGE, false);
-						bukkitWorld.setGameRule(GameRules.ENTITY_DROPS, false);
-						bukkitWorld.setGameRule(GameRules.FALL_DAMAGE, false);
-						bukkitWorld.setGameRule(GameRules.FIRE_DAMAGE, false);
-						bukkitWorld.setGameRule(GameRules.FREEZE_DAMAGE, false);
-						bukkitWorld.setGameRule(GameRules.KEEP_INVENTORY, true);
-						bukkitWorld.setGameRule(GameRules.LOCATOR_BAR, false);
-						bukkitWorld.setGameRule(GameRules.MOB_GRIEFING, false);
-						bukkitWorld.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
-						bukkitWorld.setGameRule(GameRules.SPAWN_WARDENS, false);
-						bukkitWorld.setGameRule(GameRules.SPAWN_WANDERING_TRADERS, false);
-						bukkitWorld.setGameRule(GameRules.SPAWN_PHANTOMS, false);
-						bukkitWorld.setGameRule(GameRules.SPAWN_MONSTERS, false);
-						bukkitWorld.setGameRule(GameRules.SPAWN_MOBS, false);
-						bukkitWorld.setGameRule(GameRules.SPAWN_PATROLS, false);
-						bukkitWorld.setGameRule(GameRules.SHOW_DEATH_MESSAGES, false);
-						bukkitWorld.setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
+						ruleProfile.apply(bukkitWorld);
 
 						activeArenas.add(instanceName);
 						plugin.log("<green>成功创建小游戏世界实例: <aqua>" + instanceName + "</aqua></green>"); //
