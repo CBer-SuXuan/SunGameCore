@@ -43,7 +43,7 @@ SunGameCore 已发布到 JitPack，其他小游戏插件可以直接通过 JitPa
 JitPack 页面：
 
 ```text
-https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.1
+https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.2
 ```
 
 ### 2.1 Maven 示例
@@ -65,7 +65,7 @@ https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.1
 <dependency>
     <groupId>com.github.CBer-SuXuan</groupId>
     <artifactId>SunGameCore</artifactId>
-    <version>v1.2.1</version>
+    <version>v1.2.2</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -80,7 +80,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.CBer-SuXuan:SunGameCore:v1.2.1'
+    compileOnly 'com.github.CBer-SuXuan:SunGameCore:v1.2.2'
 }
 ```
 
@@ -168,10 +168,10 @@ public interface ArenaManager {
 
 ```java
 WorldRuleProfile gameRules = WorldRuleProfile.empty()
-        .set(GameRule.DO_DAYLIGHT_CYCLE, false)
-        .set(GameRule.DO_WEATHER_CYCLE, false)
-        .set(GameRule.DO_MOB_SPAWNING, false)
-        .set(GameRule.KEEP_INVENTORY, true);
+        .set(GameRules.ADVANCE_TIME, false)
+        .set(GameRules.ADVANCE_WEATHER, false)
+        .set(GameRules.SPAWN_MOBS, false)
+        .set(GameRules.KEEP_INVENTORY, true);
 
 arenaManager.createArenaAsync("arena_template", "game_" + System.currentTimeMillis(), gameRules)
         .thenAccept(world -> {
@@ -214,10 +214,10 @@ GameTaskRegistry createTaskRegistry(JavaPlugin owner);
 
 ```java
 WorldRuleProfile queueRules = WorldRuleProfile.empty()
-        .set(GameRule.DO_DAYLIGHT_CYCLE, false)
-        .set(GameRule.DO_WEATHER_CYCLE, false)
-        .set(GameRule.DO_MOB_SPAWNING, false)
-        .set(GameRule.KEEP_INVENTORY, true);
+        .set(GameRules.ADVANCE_TIME, false)
+        .set(GameRules.ADVANCE_WEATHER, false)
+        .set(GameRules.SPAWN_MOBS, false)
+        .set(GameRules.KEEP_INVENTORY, true);
 
 QueueSettings settings = new QueueSettings(
         "example",
