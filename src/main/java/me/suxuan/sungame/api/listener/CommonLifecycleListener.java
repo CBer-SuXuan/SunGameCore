@@ -4,9 +4,7 @@ import me.suxuan.sungame.api.session.GameSession;
 import me.suxuan.sungame.api.session.ManagedPlayerProvider;
 import me.suxuan.sungame.util.PlayerStateUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -31,59 +29,53 @@ public final class CommonLifecycleListener<G extends GameSession> implements Lis
 	private final ManagedPlayerProvider<G> provider;
 	private final LifecycleCallbacks<G> callbacks;
 	private final ProtectionPolicy protectionPolicy;
+	private final LifecyclePolicy<G> lifecyclePolicy;
 
-	public CommonLifecycleListener(@NotNull ManagedPlayerProvider<G> provider, @NotNull LifecycleCallbacks<G> callbacks) {
-		this(provider, callbacks, new ProtectionPolicy() {});
-	}
-
-	public CommonLifecycleListener(@NotNull ManagedPlayerProvider<G> provider, @NotNull LifecycleCallbacks<G> callbacks, @NotNull ProtectionPolicy protectionPolicy) {
+	public CommonLifecycleListener(@NotNull ManagedPlayerProvider<G> provider, @NotNull LifecycleCallbacks<G> callbacks,
+	                               @NotNull ProtectionPolicy protectionPolicy, @NotNull LifecyclePolicy<G> lifecyclePolicy) {
 		this.provider = provider;
 		this.callbacks = callbacks;
 		this.protectionPolicy = protectionPolicy;
+		this.lifecyclePolicy = lifecyclePolicy;
 	}
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
-		event.joinMessage(null);
 		Player player = event.getPlayer();
-		player.getInventory().clear();
-		PlayerStateUtil.reset(player);
+		if (lifecyclePolicy.hideJoinMessage(player)) event.joinMessage(null);
+		if (lifecyclePolicy.clearInventoryOnJoin(player)) player.getInventory().clear();
+		if (lifecyclePolicy.resetPlayerOnJoin(player)) PlayerStateUtil.reset(player);
 		if (callbacks.handleJoin(player)) return;
-		if (player.isOp()) {
-			World mainWorld = Bukkit.getWorld("world");
-			if (mainWorld == null) mainWorld = Bukkit.getWorlds().getFirst();
-			player.setGameMode(GameMode.CREATIVE);
-			player.teleportAsync(mainWorld.getSpawnLocation());
-			return;
-		}
 		if (callbacks.autoJoinQueue(player)) callbacks.joinQueue(player);
 	}
 
 	@EventHandler
 	public void onFoodLevelChange(FoodLevelChangeEvent event) {
 		if (!(event.getEntity() instanceof Player player)) return;
-		if (provider.isManaged(player)) {
-			event.setCancelled(true);
-			player.setFoodLevel(20);
-			player.setSaturation(20.0F);
-		}
+		if (!provider.isManaged(player)) return;
+		if (!lifecyclePolicy.cancelFoodChange(player)) return;
+		event.setCancelled(true);
+		player.setFoodLevel(lifecyclePolicy.foodLevel(player));
+		player.setSaturation(lifecyclePolicy.saturation(player));
 	}
 
 	@EventHandler
 	public void onRegainHealth(EntityRegainHealthEvent event) {
 		if (!(event.getEntity() instanceof Player player)) return;
 		if (provider.gameOf(player).isEmpty()) return;
-		if (event.getRegainReason() == EntityRegainHealthEvent.RegainReason.SATIATED
-				|| event.getRegainReason() == EntityRegainHealthEvent.RegainReason.REGEN) {
-			event.setCancelled(true);
-		}
+		if (lifecyclePolicy.cancelNaturalRegain(player, event.getRegainReason())) event.setCancelled(true);
 	}
 
 	@EventHandler public void onDropItem(PlayerDropItemEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelItemDrop(event.getPlayer())) event.setCancelled(true); }
 	@EventHandler public void onPickupArrow(PlayerPickupArrowEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelItemPickup(event.getPlayer())) event.setCancelled(true); }
-	@EventHandler public void onPortal(PlayerPortalEvent event) { if (provider.isManaged(event.getPlayer())) event.setCancelled(true); }
 	@EventHandler public void onInteractEntity(PlayerInteractEntityEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelEntityInteract(event.getPlayer())) event.setCancelled(true); }
 	@EventHandler public void onSwapHandItems(PlayerSwapHandItemsEvent event) { if (provider.isManaged(event.getPlayer()) && protectionPolicy.cancelSwapHandItems(event.getPlayer())) event.setCancelled(true); }
+
+	@EventHandler
+	public void onPortal(PlayerPortalEvent event) {
+		Player player = event.getPlayer();
+		if (provider.isManaged(player) && lifecyclePolicy.cancelPortal(player)) event.setCancelled(true);
+	}
 
 	@EventHandler
 	public void onPickupItem(EntityPickupItemEvent event) {
@@ -94,13 +86,7 @@ public final class CommonLifecycleListener<G extends GameSession> implements Lis
 	public void onTeleport(PlayerTeleportEvent event) {
 		Player player = event.getPlayer();
 		if (!provider.isManaged(player)) return;
-		PlayerTeleportEvent.TeleportCause cause = event.getCause();
-		if (cause == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
-				|| cause == PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
-				|| cause == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL
-				|| cause == PlayerTeleportEvent.TeleportCause.END_PORTAL) {
-			event.setCancelled(true);
-		}
+		if (lifecyclePolicy.cancelTeleport(player, event.getCause())) event.setCancelled(true);
 	}
 
 	@EventHandler
@@ -108,13 +94,16 @@ public final class CommonLifecycleListener<G extends GameSession> implements Lis
 		Player player = event.getPlayer();
 		Optional<G> optional = provider.gameOf(player);
 		if (optional.isEmpty() || !optional.get().world().equals(player.getWorld())) return;
-		event.getDrops().clear();
-		event.setDroppedExp(0);
-		event.deathMessage(null);
-		callbacks.eliminate(player, "死亡");
-		Bukkit.getScheduler().runTaskLater(provider.plugin(), () -> {
-			if (player.isOnline() && player.isDead()) player.spigot().respawn();
-		}, 2L);
+		G game = optional.get();
+		if (lifecyclePolicy.clearDeathDrops(player, game)) event.getDrops().clear();
+		if (lifecyclePolicy.clearDroppedExp(player, game)) event.setDroppedExp(0);
+		if (lifecyclePolicy.hideDeathMessage(player, game)) event.deathMessage(null);
+		callbacks.eliminate(player, lifecyclePolicy.deathEliminateReason(player, game));
+		if (lifecyclePolicy.autoRespawn(player, game)) {
+			Bukkit.getScheduler().runTaskLater(provider.plugin(), () -> {
+				if (player.isOnline() && player.isDead()) player.spigot().respawn();
+			}, Math.max(0L, lifecyclePolicy.autoRespawnDelayTicks(player, game)));
+		}
 	}
 
 	@EventHandler
@@ -122,17 +111,20 @@ public final class CommonLifecycleListener<G extends GameSession> implements Lis
 		Player player = event.getPlayer();
 		Optional<G> optional = provider.gameOf(player);
 		if (optional.isEmpty()) return;
-		Location respawn = callbacks.respawnLocation(player, optional.get());
+		G game = optional.get();
+		Location respawn = callbacks.respawnLocation(player, game);
 		if (respawn != null) event.setRespawnLocation(respawn);
 		Bukkit.getScheduler().runTask(provider.plugin(), () -> {
 			if (!player.isOnline()) return;
-			PlayerStateUtil.prepareSpectatorLike(player);
+			if (lifecyclePolicy.prepareSpectatorLikeOnRespawn(player, game)) PlayerStateUtil.prepareSpectatorLike(player);
+			callbacks.afterRespawn(player, game);
 		});
 	}
 
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
-		event.quitMessage(null);
-		callbacks.handleQuit(event.getPlayer());
+		Player player = event.getPlayer();
+		if (lifecyclePolicy.hideQuitMessage(player)) event.quitMessage(null);
+		callbacks.handleQuit(player);
 	}
 }

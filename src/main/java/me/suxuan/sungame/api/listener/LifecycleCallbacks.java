@@ -21,4 +21,5 @@ public interface LifecycleCallbacks<G extends GameSession> {
 	void handleQuit(@NotNull Player player);
 	void eliminate(@NotNull Player player, @NotNull String reason);
 	default Location respawnLocation(@NotNull Player player, @NotNull G game) { return player.getLocation().clone(); }
+	default void afterRespawn(@NotNull Player player, @NotNull G game) {}
 }

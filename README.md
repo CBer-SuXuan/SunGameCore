@@ -43,7 +43,7 @@ SunGameCore 已发布到 JitPack，其他小游戏插件可以直接通过 JitPa
 JitPack 页面：
 
 ```text
-https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.1.0
+https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.0
 ```
 
 ### 2.1 Maven 示例
@@ -65,7 +65,7 @@ https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.1.0
 <dependency>
     <groupId>com.github.cber-suxuan</groupId>
     <artifactId>SunGameCore</artifactId>
-    <version>v1.1.0</version>
+    <version>v1.2.0</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -80,7 +80,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.cber-suxuan:SunGameCore:v1.1.0'
+    compileOnly 'com.github.cber-suxuan:SunGameCore:v1.2.0'
 }
 ```
 
@@ -357,20 +357,42 @@ public final class ExampleProvider implements ManagedPlayerProvider<ExampleGame>
 
 ### 10.1 生命周期监听器
 
-`CommonLifecycleListener` 处理：
+`CommonLifecycleListener` 只负责监听生命周期事件并调用使用方提供的策略/回调。具体行为不再由库写死，必须显式传入 `LifecyclePolicy`。
 
-- 玩家进服
-- 玩家退服
-- 死亡与重生
-- 饥饿、回血、掉落、拾取等基础限制
-- 自动入队
-- 淘汰回调
+`LifecyclePolicy` 可以控制：
+
+- 是否隐藏进服/退服消息
+- 进服时是否清背包、重置玩家状态
+- 是否取消饥饿变化、自然回血
+- 是否禁止传送门和特殊传送
+- 死亡时是否清掉落、清经验、隐藏死亡消息
+- 死亡淘汰原因
+- 是否自动重生、自动重生延迟
+- 重生后是否设置类旁观状态
 
 ```java
+LifecyclePolicy<ExampleGame> lifecyclePolicy = LifecyclePolicy.defaults();
+
 Bukkit.getPluginManager().registerEvents(
-        new CommonLifecycleListener<>(provider, lifecycleCallbacks, protectionPolicy),
+        new CommonLifecycleListener<>(provider, lifecycleCallbacks, protectionPolicy, lifecyclePolicy),
         this
 );
+```
+
+如果你的小游戏需要自定义行为，可以覆盖策略方法：
+
+```java
+LifecyclePolicy<ExampleGame> lifecyclePolicy = new LifecyclePolicy<>() {
+    @Override
+    public boolean cancelFoodChange(Player player) {
+        return false;
+    }
+
+    @Override
+    public boolean prepareSpectatorLikeOnRespawn(Player player, ExampleGame game) {
+        return true;
+    }
+};
 ```
 
 ### 10.2 保护监听器
