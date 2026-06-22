@@ -43,7 +43,7 @@ SunGameCore 已发布到 JitPack，其他小游戏插件可以直接通过 JitPa
 JitPack 页面：
 
 ```text
-https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.0
+https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.1
 ```
 
 ### 2.1 Maven 示例
@@ -63,9 +63,9 @@ https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.0
 
 ```xml
 <dependency>
-    <groupId>com.github.cber-suxuan</groupId>
+    <groupId>com.github.CBer-SuXuan</groupId>
     <artifactId>SunGameCore</artifactId>
-    <version>v1.2.0</version>
+    <version>v1.2.1</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -80,7 +80,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.cber-suxuan:SunGameCore:v1.2.0'
+    compileOnly 'com.github.CBer-SuXuan:SunGameCore:v1.2.1'
 }
 ```
 
