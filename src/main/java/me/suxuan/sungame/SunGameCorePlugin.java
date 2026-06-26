@@ -4,6 +4,7 @@ import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
 import me.suxuan.slimearena.api.ArenaManager;
 import me.suxuan.slimearena.impl.ASPArenaManagerImpl;
 import me.suxuan.sungame.api.MiniGameService;
+import me.suxuan.sungame.hook.WorldGuardHook;
 import me.suxuan.sungame.impl.MiniGameServiceImpl;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -22,6 +23,7 @@ public final class SunGameCorePlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		instance = this;
+		saveDefaultConfig();
 
 		if (!checkSlimePaperEnvironment()) {
 			log("<red>启动失败：未检测到 AdvancedSlimePaper 核心。</red>");
@@ -45,14 +47,21 @@ public final class SunGameCorePlugin extends JavaPlugin {
 		}
 
 		if (arenaManager != null) {
+			WorldGuardHook worldGuardHook = new WorldGuardHook(this);
 			log("<yellow>正在清理残留临时竞技场世界...</yellow>");
 			for (String arenaName : arenaManager.getActiveArenas()) {
 				World world = Bukkit.getWorld(arenaName);
-				if (world == null) continue;
+				if (world == null) {
+					worldGuardHook.cleanupWorldGuardDataFolder(arenaName);
+					continue;
+				}
 				for (Player player : world.getPlayers()) {
 					player.kick(Component.text("服务器正在关闭/重启"));
 				}
+				worldGuardHook.cleanupTransientWorld(world);
 				Bukkit.unloadWorld(world, false);
+				worldGuardHook.cleanupTransientWorld(world, true);
+				worldGuardHook.cleanupWorldGuardDataFolder(arenaName);
 				log("<gray>强制清理残留世界: <aqua>" + arenaName + "</aqua></gray>");
 			}
 		}

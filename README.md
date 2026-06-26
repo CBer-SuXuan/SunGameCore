@@ -43,7 +43,7 @@ SunGameCore 已发布到 JitPack，其他小游戏插件可以直接通过 JitPa
 JitPack 页面：
 
 ```text
-https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.2
+https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.5
 ```
 
 ### 2.1 Maven 示例
@@ -65,7 +65,7 @@ https://jitpack.io/#CBer-SuXuan/SunGameCore/v1.2.2
 <dependency>
     <groupId>com.github.CBer-SuXuan</groupId>
     <artifactId>SunGameCore</artifactId>
-    <version>v1.2.2</version>
+    <version>v1.2.5</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -80,7 +80,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.CBer-SuXuan:SunGameCore:v1.2.2'
+    compileOnly 'com.github.CBer-SuXuan:SunGameCore:v1.2.5'
 }
 ```
 
@@ -189,6 +189,24 @@ arenaManager.createArenaAsync("arena_template", "game_" + System.currentTimeMill
 Location fallback = Bukkit.getWorlds().getFirst().getSpawnLocation();
 arenaManager.discardArenaAsync(world, fallback);
 ```
+
+### 5.1 WorldGuard 软依赖清理
+
+SunGameCore 软依赖 WorldGuard。对于由 `ArenaManager` 创建并记录在活动列表中的临时 Slime 世界，销毁时会：
+
+- 调用 WorldGuard `RegionContainer#unload(...)` 卸载对应世界的 RegionManager 缓存；
+- 执行 `Bukkit.unloadWorld(world, false)`，不保存临时世界；
+- 如果 `plugins/WorldGuard/worlds/<临时世界名>` 存在，则删除该目录，避免 WorldGuard 为临时世界生成的 `config.yml`、`blacklist.txt` 等文件持续残留。
+
+默认配置：
+
+```yaml
+worldguard:
+  cleanup-transient-worlds: true
+  delete-transient-world-folders: true
+```
+
+该清理仅针对 SunGameCore 自己创建并管理的临时世界，不会主动删除普通主世界或其他插件世界的 WorldGuard 数据。
 
 ---
 

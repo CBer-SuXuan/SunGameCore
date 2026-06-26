@@ -1,0 +1,6 @@
+worldguard:
+  # 对 SunGameCore 创建的临时 Slime 世界主动卸载 WorldGuard 的 region manager/cache。
+  cleanup-transient-worlds: true
+  # 临时 Slime 世界卸载后，直接删除 WorldGuard 为该世界生成的数据目录。
+  # 这些世界由 SunGameCore 创建并用后即焚，因此删除 plugins/WorldGuard/worlds/<临时世界名> 是安全的。
+  delete-transient-world-folders: true
